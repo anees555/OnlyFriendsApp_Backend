@@ -6,8 +6,9 @@ from src.database import  Base
 from src.config import settings
 
 from alembic import context
-from  src.auth.models import Base as AuthBase
-from src.profile.models  import Base as ProfileBase
+from  src.auth.models import *
+from src.profile.models  import *
+from src.post.models import *
 from sqlalchemy.ext.declarative import DeclarativeMeta
 
 
@@ -25,10 +26,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = [
-    AuthBase.metadata,
-    ProfileBase.metadata,
-]
+target_metadata = Base.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:

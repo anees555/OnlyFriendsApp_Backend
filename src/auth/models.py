@@ -20,4 +20,6 @@ class User(Base):
 
     profile = relationship("Profile", back_populates="user", uselist=False)
 
+    post = relationship("post.models.Post", back_populates="author")
+
 
