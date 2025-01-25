@@ -4,6 +4,7 @@ from sqlalchemy import Column, Date, DateTime, Integer, String, ForeignKey
 from ..database import Base
 from datetime import datetime
 from sqlalchemy.orm  import relationship
+from ..post.models import post_votes
 # from ..profile.models import Profile
 
 class User(Base):
@@ -22,4 +23,6 @@ class User(Base):
 
     post = relationship("post.models.Post", back_populates="author")
 
-
+    voted_posts = relationship(
+        "post.models.Post", secondary=post_votes, back_populates="voted_by_users"
+    )

@@ -1,9 +1,19 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import desc
 
 from ..database import get_db
 from .schemas import PostCreate, Post
-from .services import create_post_svc, get_user_posts_svc,get_random_posts_svc, get_post_from_post_id_svc, delete_post_svc
+from .services import (create_post_svc, 
+                       get_user_posts_svc,
+                       get_random_posts_svc, 
+                       get_post_from_post_id_svc, 
+                       delete_post_svc,
+                       vote_post_svc,
+                       unvote_post_svc,
+                       voted_users_post_svc,
+                       get_voted_posts_svc,
+                       search_posts_svc)
 
 from ..auth.services import get_current_user, existing_user
 from ..auth.schemas import User
@@ -71,3 +81,65 @@ def delete_post(token: str, post_id: int, db: Session = Depends(get_db)):
         )
 
     delete_post_svc(db, post_id)
+
+@router.post("/vote", status_code=status.HTTP_204_NO_CONTENT)
+def vote_post(post_id: int, username: str, db: Session = Depends(get_db)):
+    res, detail = vote_post_svc(db, post_id, username)
+    if res == False:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+    
+@router.post("/unvote", status_code=status.HTTP_204_NO_CONTENT)
+def unvote_post(post_id: int, username: str, db: Session = Depends(get_db)):
+    res, detail = unvote_post_svc(db, post_id, username)
+    if res == False:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+    
+@router.get("/votes/{post_id}", response_model=list[User])
+def users_like_post(post_id: int, db: Session = Depends(get_db)):
+    return voted_users_post_svc(db, post_id)
+
+
+@router.get("/voted", response_model=list[Post])
+def get_voted_posts(token: str, page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
+    # Verify the token
+    user = get_current_user(db, token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
+        )
+
+    # Get voted posts
+    return get_voted_posts_svc(db, user.username, page, limit)
+
+@router.get("/search", response_model=list[Post])
+def search_posts(
+    query: str,
+    token: str,
+    page: int = 1,
+    limit: int = 10,
+    db: Session = Depends(get_db)
+):
+    """
+    Search posts by content using a query string.
+    """
+    # Verify the token
+    user = get_current_user(db, token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
+        )
+
+    # Search posts
+    return search_posts_svc(db, query, page, limit)
+
+    
+@router.get("/{post_id}", response_model=Post)
+def get_post(post_id: int, db: Session = Depends(get_db)):
+    db_post = get_post_from_post_id_svc(db, post_id)
+    if not db_post:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="invalid post id"
+        )
+
+    return db_post
+

@@ -8,6 +8,7 @@ class PostCreate(BaseModel):
 class Post(PostCreate):
     id: int
     author_username: str
+    votes_count: Optional[int] = 0
     created_at: datetime
 
     class Config:

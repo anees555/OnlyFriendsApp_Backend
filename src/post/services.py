@@ -43,8 +43,10 @@ def get_random_posts_svc(
 
     result = []
     for post, username in posts:
-        post_dict = post.__dict__
-        post_dict["username"] = username
+        post_dict = post.__dict__.copy()
+        if "username" in post_dict:
+            del post_dict["username"]
+        # post_dict["username"] = username
         result.append(post_dict)
 
     return result
@@ -57,3 +59,119 @@ def delete_post_svc(db: Session, post_id:int):
     post = get_post_from_post_id_svc(db, post_id)
     db.delete(post)
     db.commit()
+
+#vote post
+def vote_post_svc(db: Session, post_id: int, username: str):
+    post = get_post_from_post_id_svc(db, post_id)
+    if not post:
+        return False, "invalid post_id"
+
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        return False, "invalid username"
+
+    if user in post.voted_by_users:
+        return False, "already voted"
+
+    # increase like count of post
+    post.voted_by_users.append(user)
+    post.votes_count = len(post.voted_by_users)
+
+    db.commit()
+    db.refresh(post)
+
+    return True, "done"
+
+# unlike post
+def unvote_post_svc(db: Session, post_id: int, username: str):
+    post = get_post_from_post_id_svc(db, post_id)
+    if not post:
+        return False, "invalid post_id"
+
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        return False, "invalid username"
+
+    if not user in post.voted_by_users:
+        return False, "already not voted"
+
+    post.voted_by_users.remove(user)
+    post.votes_count = len(post.voted_by_users)
+
+    db.commit()
+    db.refresh(post)
+    return True, "done"
+
+# users who liked post
+def voted_users_post_svc(db: Session, post_id: int) -> list[UserSchema]:
+    post = get_post_from_post_id_svc(db, post_id)
+    if not post:
+        return []
+    voted_users = post.voted_by_users
+    # return [UserSchema.from_orm(user) for user in liked_users]
+    return voted_users
+
+def get_voted_posts_svc(db: Session, username: str, page: int = 1, limit: int = 10):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        print(f"user not found: {username}")
+        return []
+    
+    voted_posts = user.voted_posts 
+    print(f"Voted posts for user {username}: {[post.id for post in voted_posts]}")
+
+    total_voted_posts = len(voted_posts)
+    offset = (page - 1) * limit
+    if offset >= total_voted_posts:
+        return []
+    
+    result = [
+        {
+            "id": post.id,
+            "content": post.content,
+            "votes_count": post.votes_count,
+            "created_at": post.created_at,
+            "author_username": post.author_username,
+        }
+        for post in voted_posts[offset : offset + limit]
+    ]
+
+    return result
+
+def search_posts_svc(db: Session, query: str, page: int = 1, limit: int = 10):
+    """
+    Search posts by content using a case-insensitive match.
+    """
+    offset = (page - 1) * limit
+
+    # Perform case-insensitive search using `ilike`
+    posts = (
+        db.query(Post)
+        .filter(Post.content.ilike(f"%{query}%"))
+        .order_by(desc(Post.created_at))
+        .offset(offset)
+        .limit(limit)
+        .all()
+    )
+
+    result = [
+        {
+            "id": post.id,
+            "content": post.content,
+            "votes_count": post.votes_count,
+            "created_at": post.created_at,
+            "author_username": post.author_username,
+        }
+        for post in posts
+    ]
+
+    return result
+
+
+
+
+
+
+
+
+
