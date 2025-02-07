@@ -1,9 +1,10 @@
-from fastapi import UploadFile
+from fastapi import UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
 from .schemas import ProfileCreate, ProfileUpdate, Profile as ProfileSchema
 from .models import Profile
 from ..auth.models import User
 from ..auth.schemas import User as UserSchema
+
 import os
 
 def save_profile_picture(file: UploadFile, user_id: int) -> str:
@@ -48,8 +49,14 @@ def create_profile_svc(db: Session, profile: ProfileCreate, user_id:int, profile
     return db_profile
 
 def get_user_profile_svc(db:Session, user_id:int) -> ProfileSchema:
-    profile = db.query(Profile).filter(Profile.user_id==user_id).first()
-    return profile
+    existing_profile = db.query(Profile).filter(Profile.user_id == user_id).first()
+    if not existing_profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Profile does not exist for the user"
+        )
+    
+    return existing_profile
 
 def update_profile_svc(
     db: Session, profile_data: ProfileCreate, user_id: int, profile_pic: UploadFile = None

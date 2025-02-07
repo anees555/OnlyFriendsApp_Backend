@@ -58,7 +58,8 @@ def get_current_user_profile(token:str, db:Session=Depends(get_db)):
 @router.get("/user/{username}", response_model=ProfileSchema)
 def get_user_profile(username:str, db:Session=Depends(get_db)):
     user = existing_user(db, username, "")
-    return get_user_profile_svc(db, user.id)
+    profile = get_user_profile_svc(db, user.id)
+    return profile
 
 @router.put("/", response_model=ProfileSchema, status_code=status.HTTP_200_OK)
 def update_profile(
