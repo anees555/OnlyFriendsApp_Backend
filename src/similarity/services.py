@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 def calculate_similarity(db:Session):
     profiles = db.query(Profile).all()
-    user_interests = {profile.user_id : profile.interests for profile in profiles}
+    user_interests = {profile.user_id : " ".join([interest.name for interest in profile.interests]) for profile in profiles}
 
     user_ids = list(user_interests.keys())
     interest_texts = list(user_interests.values())

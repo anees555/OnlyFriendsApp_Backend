@@ -1,13 +1,14 @@
 from pydantic import BaseModel
-from typing import  Optional
-from datetime  import datetime, date
+from typing import Optional, List
+from datetime import date
 from .enums import Gender
 
 class ProfileBase(BaseModel):
     date_of_birth: Optional[date]
     gender: Optional[Gender]
     location: Optional[str]
-    interests: Optional[str]
+    bio: Optional[str]
+    # interests: Optional[List[str]]
 
 class ProfileCreate(ProfileBase):
     pass
@@ -22,6 +23,5 @@ class Profile(ProfileBase):
 
     class Config:
         from_attributes = True
-        
 
-    
+

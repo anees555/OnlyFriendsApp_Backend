@@ -45,6 +45,22 @@ def get_current_user_posts(token: str, db: Session = Depends(get_db)):
 
     return get_user_posts_svc(db, user.username)
 
+@router.get("/user_info", status_code=status.HTTP_200_OK)
+def get_user_info(token: str, db: Session = Depends(get_db)):
+    db_user = get_current_user(db, token)
+    if not db_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="you are not authorized."
+        )
+
+    return {
+        "username": db_user.username,
+        "fullname": f"{db_user.firstname} {db_user.lastname}"
+    }
+
+
+
+
 @router.get("/user/{username}", response_model=list[Post])
 async def get_user_posts(username: str, db: Session = Depends(get_db)):
     # verify token
