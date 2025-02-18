@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Header
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime
@@ -50,7 +50,7 @@ def login(
 
 # get current user
 @router.get("/current_user", status_code=status.HTTP_200_OK, response_model=UserSchema)
-def current_user(token: str, db: Session = Depends(get_db)):
+def current_user(token: str = Header(...), db: Session = Depends(get_db)):
     db_user = get_current_user(db, token)
     if not db_user:
         raise HTTPException(
@@ -60,7 +60,7 @@ def current_user(token: str, db: Session = Depends(get_db)):
     return db_user
 
 @router.get("/user_info", status_code=status.HTTP_200_OK)
-def get_user_info(token: str, db: Session = Depends(get_db)):
+def get_user_info(token: str = Header(...), db: Session = Depends(get_db)):
     db_user = get_current_user(db, token)
     if not db_user:
         raise HTTPException(

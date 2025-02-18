@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session
 from ..database import get_db
 from .services import get_similar_users, calculate_similarity
@@ -12,7 +12,7 @@ from typing import List, Dict, Any
 router = APIRouter(prefix="/similarity", tags=["Similarity"])
 
 @router.post("/compute")
-def compute_similarity(token:  str, db: Session = Depends(get_db)): # Explicitly define the return type
+def compute_similarity(token:  str = Header(...) , db: Session = Depends(get_db)): # Explicitly define the return type
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
@@ -29,8 +29,8 @@ def compute_similarity(token:  str, db: Session = Depends(get_db)): # Explicitly
 
 @router.get("/{user_id}", response_model=List[SimilarityResponse])
 def get_user_similarity(
-    token: str,
     user_id: int, 
+    token: str = Header(...),
     db: Session = Depends(get_db)): # Explicitly define the return type
 
     user = get_current_user(db, token)

@@ -20,8 +20,10 @@ class Profile(ProfileBase):
     id: int
     user_id: int
     profile_pic: Optional[str]
+    interests: Optional[List[str]]
 
     class Config:
         from_attributes = True
+        
 
 

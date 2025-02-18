@@ -57,7 +57,11 @@ def get_user_profile_svc(db: Session, user_id: int) -> ProfileSchema:
             detail="Profile does not exist for the user"
         )
     
-    profile_data = ProfileSchema.from_orm(existing_profile)
+    profile_dict = existing_profile.__dict__.copy()
+    profile_dict["interests"] = [interest.name for interest in existing_profile.interests]  # Assuming 'name' is the string field
+    profile_data = ProfileSchema(**profile_dict)
+
+    # profile_data.interests = [interest.name for interest in existing_profile.interests]
     
     return profile_data
 

@@ -28,6 +28,5 @@ def calculate_similarity(db:Session):
                 )
                 db.add(similarity_entry)
     db.commit()
-
 def get_similar_users(db: Session, user_id: int):
     return db.query(Similarity).filter(Similarity.user_id == user_id).order_by(Similarity.similarity_score.desc()).all()

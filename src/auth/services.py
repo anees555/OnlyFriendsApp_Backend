@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, Header
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
@@ -28,7 +28,7 @@ def create_access_token(username: str, id: int):
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
 
 # get current user from token
-def get_current_user(db: Session, token: str = Depends(oauth2_bearer)):
+def get_current_user(db: Session, token: str = Header(...)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")

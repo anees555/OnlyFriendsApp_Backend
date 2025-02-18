@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, status, HTTPException, Header
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import desc
 
@@ -21,7 +21,7 @@ from ..auth.schemas import User
 router = APIRouter(prefix="/posts", tags=["posts"])
 
 @router.post("/", response_model=Post, status_code=status.HTTP_201_CREATED)
-def create_post(post: PostCreate, token: str, db: Session = Depends(get_db)):
+def create_post(post: PostCreate, token: str = Header(...), db: Session = Depends(get_db)):
     # verify the token
     user = get_current_user(db, token)
     if not user:
@@ -35,7 +35,7 @@ def create_post(post: PostCreate, token: str, db: Session = Depends(get_db)):
     return db_post
 
 @router.get("/user", response_model=list[Post])
-def get_current_user_posts(token: str, db: Session = Depends(get_db)):
+def get_current_user_posts(token: str = Header(...), db: Session = Depends(get_db)):
     # verify the token
     user = get_current_user(db, token)
     if not user:
@@ -46,7 +46,7 @@ def get_current_user_posts(token: str, db: Session = Depends(get_db)):
     return get_user_posts_svc(db, user.username)
 
 @router.get("/user_info", status_code=status.HTTP_200_OK)
-def get_user_info(token: str, db: Session = Depends(get_db)):
+def get_user_info(token: str = Header(...), db: Session = Depends(get_db)):
     db_user = get_current_user(db, token)
     if not db_user:
         raise HTTPException(
@@ -69,7 +69,7 @@ async def get_user_posts(username: str, db: Session = Depends(get_db)):
     return get_user_posts_svc(db, user.username)
 
 @router.get("/feed")
-def get_random_posts(token:str,
+def get_random_posts(token:str = Header(...),
     page: int = 1, limit: int = 5, db: Session = Depends(get_db)
 ):
     user = get_current_user(db, token)
@@ -80,7 +80,9 @@ def get_random_posts(token:str,
     return get_random_posts_svc(db, page, limit)
 
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(token: str, post_id: int, db: Session = Depends(get_db)):
+def delete_post(post_id: int,
+                token: str = Header(...),
+                db: Session = Depends(get_db)):
     # verify the token
     user = get_current_user(db, token)
     if not user:
@@ -116,7 +118,7 @@ def users_like_post(post_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/voted", response_model=list[Post])
-def get_voted_posts(token: str, page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
+def get_voted_posts(token: str = Header(...), page: int = 1, limit: int = 10, db: Session = Depends(get_db)):
     # Verify the token
     user = get_current_user(db, token)
     if not user:

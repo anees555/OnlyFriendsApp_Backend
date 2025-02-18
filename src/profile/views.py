@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File, Form, Header
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import date
@@ -20,7 +20,7 @@ def get_all_interests(db: Session = Depends(get_db)):
 
 @router.post("/", response_model=ProfileSchema, status_code=status.HTTP_201_CREATED)
 def create_profile(
-    token: str,
+    token: str = Header(...),
     date_of_birth: date = Form(...),
     gender: Gender = Form(...),
     location: str = Form(...),
@@ -47,27 +47,28 @@ def create_profile(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         )
-
+    
+    
     return db_profile
 
-@router.get("/myprofile", response_model=ProfileSchema)
-def get_current_user_profile(token: str, db: Session = Depends(get_db)):
+@router.post("/interest", response_model=List[str], status_code=status.HTTP_201_CREATED)
+def add_interest(token: str = Header(...), interests: List[str] = Form(...), db: Session = Depends(get_db)):
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized"
         )
-    return get_user_profile_svc(db, user.id)
+    
+    updated_interest = add_interest_to_profile(db, user.id, interests)
+    
+    return updated_interest
 
-@router.get("/user/{username}", response_model=ProfileSchema)
-def get_user_profile(username: str, db: Session = Depends(get_db)):
-    user = existing_user(db, username, "")
-    profile = get_user_profile_svc(db, user.id)
-    return profile
+
 
 @router.put("/", response_model=ProfileSchema, status_code=status.HTTP_200_OK)
 def update_profile(
-    token: str,
+    token: str = Header(...),
     date_of_birth: Optional[date] = Form(None),
     gender: Optional[Gender] = Form(None),
     location: Optional[str] = Form(None),
@@ -102,21 +103,29 @@ def update_profile(
 
     return updated_profile
 
-@router.post("/interest", response_model=List[str], status_code=status.HTTP_201_CREATED)
-def add_interest(token: str, interests: List[str] = Form(...), db: Session = Depends(get_db)):
+
+
+@router.get("/myprofile", response_model=ProfileSchema)
+def get_current_user_profile(token: str = Header(...), db: Session = Depends(get_db)):
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="You are not authorized"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
         )
-    
-    updated_interest = add_interest_to_profile(db, user.id, interests)
-    
-    return updated_interest
+    return get_user_profile_svc(db, user.id)
+
+@router.get("/user/{username}", response_model=ProfileSchema)
+def get_user_profile(username: str, db: Session = Depends(get_db)):
+    user = existing_user(db, username, "")
+    profile = get_user_profile_svc(db, user.id)
+    return profile
+
+
+
+
 
 @router.get("/myprofile/interests", response_model=List[str])
-def get_current_user_interests(token: str, db: Session = Depends(get_db)):
+def get_current_user_interests(token , db: Session = Depends(get_db)):
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
