@@ -33,6 +33,9 @@ def create_profile_svc(db: Session, profile: ProfileCreate, user_id: int, profil
     profile_pic_url = None
     if profile_pic:
         profile_pic_url = save_profile_picture(profile_pic, user_id)
+
+    user = db.query(User).filter(User.id == user_id).first()
+    interests = user.interests
     
     db_profile = Profile(
         date_of_birth=profile.date_of_birth,
@@ -41,6 +44,7 @@ def create_profile_svc(db: Session, profile: ProfileCreate, user_id: int, profil
         bio=profile.bio,
         profile_pic=profile_pic_url,
         user_id=user_id
+        # interests=interests
     )
 
     db.add(db_profile)
@@ -85,6 +89,17 @@ def update_profile_svc(db: Session, profile_data: ProfileCreate, user_id: int, p
         existing_profile.location = profile_data.location
     if profile_data.bio:
         existing_profile.bio = profile_data.bio
+    if profile_data.interests:
+        interests = []
+        for interest_name in profile_data.interests:
+            interest = db.query(Interest).filter(Interest.name == interest_name).first()
+            if not interest:
+                interest = Interest(name=interest_name)
+                db.add(interest)
+                db.commit()
+                db.refresh(interest)
+            interest.append(interest)
+        existing_profile.interests = interests
 
     db.commit()
     db.refresh(existing_profile)
@@ -96,11 +111,11 @@ def update_profile_svc(db: Session, profile_data: ProfileCreate, user_id: int, p
 # Interest logic
 def add_interest_to_profile(db: Session, user_id: int, interest_names: List[str]):
      # Fetch the user's profile
-    profile = db.query(Profile).filter(Profile.user_id == user_id).first()
-    if not profile:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile does not exist for the user"
+            detail="User does not exist"
         )
     for interest_name in interest_names:
         interest = db.query(Interest).filter(Interest.name == interest_name).first()
@@ -114,23 +129,23 @@ def add_interest_to_profile(db: Session, user_id: int, interest_names: List[str]
 
 
     # Add the interest to the profile
-        if interest not in profile.interests:
-            profile.interests.append(interest)
+        if interest not in user.interests:
+            user.interests.append(interest)
             
     db.commit()
-    db.refresh(profile)
+    db.refresh(user)
 
-    return [interest.name for interest in profile.interests]
+    return [interest.name for interest in user.interests]
 
-def get_profile_interests(db: Session, user_id: int) -> list[str]:
-    profile = db.query(Profile).filter(Profile.user_id == user_id).first()
-    if not profile:
+def get_user_interests(db: Session, user_id: int) -> list[str]:
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profile does not exist for the user"
+            detail="User does not exist"
         )
 
-    return [interest.name for interest in profile.interests]
+    return [interest.name for interest in user.interests]
 
 
 

@@ -5,7 +5,7 @@ from ..database import Base
 from datetime import datetime
 from sqlalchemy.orm  import relationship
 from ..post.models import post_votes
-# from ..profile.models import Profile
+from ..profile.models import user_interest_association 
 
 class User(Base):
     __tablename__ = "users"
@@ -26,3 +26,5 @@ class User(Base):
     voted_posts = relationship(
         "post.models.Post", secondary=post_votes, back_populates="voted_by_users"
     )
+
+    interests = relationship("Interest", secondary=user_interest_association, back_populates="users")

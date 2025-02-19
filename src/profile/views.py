@@ -4,8 +4,8 @@ from typing import List, Optional
 from datetime import date
 
 from ..database import get_db
-from .schemas import ProfileCreate, Profile as ProfileSchema
-from .services import create_profile_svc, get_user_profile_svc, update_profile_svc, add_interest_to_profile, get_profile_interests
+from .schemas import ProfileCreate, ProfileUpdate, Profile as ProfileSchema
+from .services import create_profile_svc, get_user_profile_svc, update_profile_svc, add_interest_to_profile, get_user_interests
 from ..auth.services import get_current_user, existing_user
 from ..auth.schemas import User
 from .enums import Gender
@@ -18,14 +18,10 @@ def get_all_interests(db: Session = Depends(get_db)):
     interests = db.query(Interest).all()
     return [interest.name for interest in interests]
 
-@router.post("/", response_model=ProfileSchema, status_code=status.HTTP_201_CREATED)
-def create_profile(
+@router.post("/add-interests", response_model=List[str], status_code=status.HTTP_200_OK)
+def add_interests(
     token: str = Header(...),
-    date_of_birth: date = Form(...),
-    gender: Gender = Form(...),
-    location: str = Form(...),
-    bio: Optional[str] = Form(None),
-    profile_pic: UploadFile = File(None),
+    interests: List[str] = Form(...),
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, token)
@@ -34,11 +30,37 @@ def create_profile(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
         )
 
+    return add_interest_to_profile(db, user.id, interests)
+
+@router.post("/", response_model=ProfileSchema, status_code=status.HTTP_201_CREATED)
+def create_profile(
+    token: str = Header(...),
+    date_of_birth: date = Form(...),
+    gender: Gender = Form(...),
+    location: str = Form(...),
+    bio: Optional[str] = Form(None),
+    # interests: List[str] = Form(...),
+    profile_pic: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
+    user = get_current_user(db, token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
+        )
+    
+    interests = get_user_interests(db, user.id)
+    if not interests:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="You must add interests before creating a profile."
+        )
+
     profile = ProfileCreate(
         date_of_birth=date_of_birth,
         gender=gender,
         location=location,
-        bio=bio
+        bio=bio,
+        interests=interests
     )
 
     try:
@@ -73,6 +95,7 @@ def update_profile(
     gender: Optional[Gender] = Form(None),
     location: Optional[str] = Form(None),
     bio: Optional[str] = Form(None),
+    interests: Optional[List[str]] = Form(None),
     profile_pic: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
 ):
@@ -87,11 +110,12 @@ def update_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found."
         )
 
-    profile_data = ProfileCreate(
+    profile_data = ProfileUpdate(
         date_of_birth=date_of_birth or existing_profile.date_of_birth,
         gender=gender or existing_profile.gender,
         location=location or existing_profile.location,
-        bio=bio or existing_profile.bio
+        bio=bio or existing_profile.bio,
+        interests=interests or [interest.name for interest in existing_profile.interests]
     )
 
     try:
@@ -131,7 +155,7 @@ def get_current_user_interests(token , db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
         )
-    return get_profile_interests(db, user.id)
+    return get_user_interests(db, user.id)
 
 
 

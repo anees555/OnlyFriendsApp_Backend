@@ -11,10 +11,10 @@ class ProfileBase(BaseModel):
     # interests: Optional[List[str]]
 
 class ProfileCreate(ProfileBase):
-    pass
+    interests: List[str]
 
 class ProfileUpdate(ProfileBase):
-    pass 
+    interests: Optional[List[str]]
 
 class Profile(ProfileBase):
     id: int
