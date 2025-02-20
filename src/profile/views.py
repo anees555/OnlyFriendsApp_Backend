@@ -49,47 +49,47 @@ def update_interests(
 
     return update_user_interests(db, user.id, interests)
 
-@router.post("/", response_model=ProfileSchema, status_code=status.HTTP_201_CREATED)
-def create_profile(
-    token: str = Depends(oauth2_scheme),
-    date_of_birth: date = Form(...),
-    gender: Gender = Form(...),
-    location: str = Form(...),
-    bio: Optional[str] = Form(None),
-    profile_pic: UploadFile = File(None),
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
-        )
-    
-    interests = get_user_interests(db, user.id)
-    if not interests:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="You must add interests before creating a profile."
-        )
+# @router.post("/", response_model=ProfileSchema, status_code=status.HTTP_201_CREATED)
+# def create_profile(
+#     token: str = Depends(oauth2_scheme),
+#     date_of_birth: date = Form(...),
+#     gender: Gender = Form(...),
+#     location: str = Form(...),
+#     bio: Optional[str] = Form(None),
+#     profile_pic: UploadFile = File(None),
+#     db: Session = Depends(get_db)
+# ):
+#     user = get_current_user(db, token)
+#     if not user:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
+#         )
+              
+#     interests = get_user_interests(db, user.id)
+#     if not interests:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST, detail="You must add interests before creating a profile."
+#         )
 
-    profile = ProfileCreate(
-        date_of_birth=date_of_birth,
-        gender=gender,
-        location=location,
-        bio=bio,
-        interests=interests
-    )
+#     profile = ProfileCreate(
+#         date_of_birth=date_of_birth,
+#         gender=gender,
+#         location=location,
+#         bio=bio,
+#         # interests=interests
+#     )
 
-    try:
-        db_profile = create_profile_svc(db, profile, user.id, profile_pic)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+#     try:
+#         db_profile = create_profile_svc(db, profile, user.id, profile_pic)
+#     except ValueError as e:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+#         )
     
-    return db_profile
+#     return db_profile
 
 @router.put("/", response_model=ProfileSchema, status_code=status.HTTP_200_OK)
-def update_profile(
+def create_or_update_profile(
     token: str = Depends(oauth2_scheme),
     date_of_birth: Optional[date] = Form(None),
     gender: Optional[Gender] = Form(None),
@@ -103,27 +103,54 @@ def update_profile(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
         )
+
     existing_profile = db.query(Profile).filter(Profile.user_id == user.id).first()
-    if not existing_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found."
+
+    if existing_profile:
+        # Update profile
+        profile_data = ProfileUpdate(
+            date_of_birth=date_of_birth or existing_profile.date_of_birth,
+            gender=gender or existing_profile.gender,
+            location=location or existing_profile.location,
+            bio=bio or existing_profile.bio,
         )
 
-    profile_data = ProfileUpdate(
-        date_of_birth=date_of_birth or existing_profile.date_of_birth,
-        gender=gender or existing_profile.gender,
-        location=location or existing_profile.location,
-        bio=bio or existing_profile.bio,
-    )
+        try:
+            updated_profile = update_profile_svc(db, profile_data, user.id, profile_pic)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+            )
 
-    try:
-        updated_profile = update_profile_svc(db, profile_data, user.id, profile_pic)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        return updated_profile
+    else:
+        # Create profile
+        if not date_of_birth or not gender or not location:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing required fields for profile creation."
+            )
+
+        interests = get_user_interests(db, user.id)
+        if not interests:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="You must add interests before creating a profile."
+            )
+
+        profile = ProfileCreate(
+            date_of_birth=date_of_birth,
+            gender=gender,
+            location=location,
+            bio=bio,
         )
 
-    return updated_profile
+        try:
+            db_profile = create_profile_svc(db, profile, user.id, profile_pic)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+            )
+
+        return db_profile
 
 @router.get("/myprofile", response_model=ProfileSchema)
 def get_current_user_profile(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

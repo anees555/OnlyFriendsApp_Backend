@@ -11,17 +11,19 @@ class ProfileBase(BaseModel):
     # interests: Optional[List[str]]
 
 class ProfileCreate(ProfileBase):
-    interests: List[str]
+    pass
+    # interests: List[str]
 
 class ProfileUpdate(ProfileBase):
-    # interests: Optional[List[str]]
     pass
+    # interests: Optional[List[str]]
+    
 
 class Profile(ProfileBase):
     id: int
     user_id: int
     profile_pic: Optional[str]
-    # interests: Optional[List[str]]
+    # interests: List[str]
 
     class Config:
         from_attributes = True
