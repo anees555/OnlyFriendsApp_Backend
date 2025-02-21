@@ -14,6 +14,7 @@ def create_post_svc(db:Session, post:PostCreate, user_username:str):
     )
     db.add(db_post)
     db.commit()
+    
     return db_post
 
 def get_user_posts_svc(db:Session, user_username:str):

@@ -125,17 +125,6 @@ def create_or_update_profile(
         return updated_profile
     else:
         # Create profile
-        if not date_of_birth or not gender or not location:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Missing required fields for profile creation."
-            )
-
-        interests = get_user_interests(db, user.id)
-        if not interests:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="You must add interests before creating a profile."
-            )
-
         profile = ProfileCreate(
             date_of_birth=date_of_birth,
             gender=gender,

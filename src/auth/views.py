@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, status, HTTPException, Header
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from datetime import datetime
 from .schemas import UserCreate, User as UserSchema
@@ -13,6 +14,7 @@ from  .services import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
 
 @router.post("/signup", status_code=status.HTTP_201_CREATED)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
@@ -60,7 +62,7 @@ def current_user(token: str = Header(...), db: Session = Depends(get_db)):
     return db_user
 
 @router.get("/user_info", status_code=status.HTTP_200_OK)
-def get_user_info(token: str = Header(...), db: Session = Depends(get_db)):
+def get_user_info(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     db_user = get_current_user(db, token)
     if not db_user:
         raise HTTPException(

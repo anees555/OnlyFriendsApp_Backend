@@ -1,12 +1,17 @@
 from sqlalchemy.orm import Session
-from ..profile.models import Profile
+from ..profile.models import Profile, Interest, user_interest_association
+from ..auth.models import User
 from .models import Similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-def calculate_similarity(db:Session):
-    profiles = db.query(Profile).all()
-    user_interests = {profile.user_id : " ".join([interest.name for interest in profile.interests]) for profile in profiles}
+def calculate_similarity(db: Session):
+    users = db.query(User).all()
+    user_interests = {}
+    
+    for user in users:
+        interests = db.query(Interest).join(user_interest_association).filter(user_interest_association.c.user_id == user.id).all()
+        user_interests[user.id] = " ".join([interest.name for interest in interests])
 
     user_ids = list(user_interests.keys())
     interest_texts = list(user_interests.values())
@@ -28,5 +33,6 @@ def calculate_similarity(db:Session):
                 )
                 db.add(similarity_entry)
     db.commit()
+
 def get_similar_users(db: Session, user_id: int):
     return db.query(Similarity).filter(Similarity.user_id == user_id).order_by(Similarity.similarity_score.desc()).all()
