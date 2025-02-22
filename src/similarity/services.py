@@ -42,6 +42,7 @@ def get_similar_users(db: Session, user_id: int):
         if profile:
             result.append({
                 "user_id": similar_user.similar_user_id,
+                "similar_user_id": similar_user.user_id,
                 "username": profile.user.username,
                 "profile_pic": profile.profile_pic,
                 "similarity_score": similar_user.similarity_score
