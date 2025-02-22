@@ -48,7 +48,11 @@ def login(
         )
 
     access_token = create_access_token(db_user.username, db_user.id)
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "username": db_user.username,
+    }
 
 # get current user
 @router.get("/current_user", status_code=status.HTTP_200_OK, response_model=UserSchema)

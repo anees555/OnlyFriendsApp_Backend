@@ -1,6 +1,6 @@
 # schemas.py
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 
 class SimilarityBase(BaseModel):
     user_id: int
@@ -8,5 +8,8 @@ class SimilarityBase(BaseModel):
     similarity_score: float
 
 class SimilarityResponse(SimilarityBase):
+    username: str
+    profile_pic: Optional[str]
+    
     class Config:
         from_attributes = True

@@ -92,19 +92,25 @@ def delete_post(post_id: int, token: str = Depends(oauth2_scheme),  db: Session 
         )
 
     delete_post_svc(db, post_id)
-
 @router.post("/vote", status_code=status.HTTP_204_NO_CONTENT)
-def vote_post(post_id: int, username: str, db: Session = Depends(get_db)):
-    res, detail = vote_post_svc(db, post_id, username)
-    if res == False:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+def vote_or_unvote_post(post_id: int, action: str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+        # Verify the token
+        user = get_current_user(db, token)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
+            )
 
-@router.post("/unvote", status_code=status.HTTP_204_NO_CONTENT)
-def unvote_post(post_id: int, username: str, db: Session = Depends(get_db)):
-    res, detail = unvote_post_svc(db, post_id, username)
-    if res == False:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+        if action == "vote":
+            res, detail = vote_post_svc(db, post_id, user.username)
+        elif action == "unvote":
+            res, detail = unvote_post_svc(db, post_id, user.username)
+        else:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid action")
 
+        if not res:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+    
 @router.get("/votes/{post_id}", response_model=List[User])
 def users_like_post(post_id: int, db: Session = Depends(get_db)):
     return voted_users_post_svc(db, post_id)

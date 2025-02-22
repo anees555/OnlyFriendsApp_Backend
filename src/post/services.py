@@ -37,7 +37,7 @@ def get_random_posts_svc(
         return []
 
     posts = db.query(Post, User.username).join(User).order_by(desc(Post.created_at))
-
+ 
 
 
     posts = posts.offset(offset).limit(limit).all()

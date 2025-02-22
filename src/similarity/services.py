@@ -35,4 +35,15 @@ def calculate_similarity(db: Session):
     db.commit()
 
 def get_similar_users(db: Session, user_id: int):
-    return db.query(Similarity).filter(Similarity.user_id == user_id).order_by(Similarity.similarity_score.desc()).all()
+    similar_users = db.query(Similarity).filter(Similarity.user_id == user_id).order_by(Similarity.similarity_score.desc()).all()
+    result = []
+    for similar_user in similar_users:
+        profile = db.query(Profile).filter(Profile.user_id == similar_user.similar_user_id).first()
+        if profile:
+            result.append({
+                "user_id": similar_user.similar_user_id,
+                "username": profile.user.username,
+                "profile_pic": profile.profile_pic,
+                "similarity_score": similar_user.similarity_score
+            })
+    return result

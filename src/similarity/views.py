@@ -16,17 +16,17 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="v1/auth/token")
 
 
 @router.post("/compute")
-def compute_similarity(token:  str = Depends(oauth2_scheme), db: Session = Depends(get_db)): # Explicitly define the return type
+def compute_similarity(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
         )
-    existing_profile = db.query(Profile).filter(Profile.user_id == user.id).first()
-    if not existing_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found."
-        )
+    # existing_profile = db.query(Profile).filter(Profile.user_id == user.id).first()
+    # if not existing_profile:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found."
+    #     )
   
     calculate_similarity(db)
     return {"message": "User similarities computed successfully"}
@@ -35,20 +35,14 @@ def compute_similarity(token:  str = Depends(oauth2_scheme), db: Session = Depen
 def get_user_similarity(
     user_id: int, 
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)): # Explicitly define the return type
-
+    db: Session = Depends(get_db)
+):
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
         )
-    existing_profile = db.query(Profile).filter(Profile.user_id == user.id).first()
-    if not existing_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Profile not found."
-        )
-
     similar_users = get_similar_users(db, user_id)
     if not similar_users:
         raise HTTPException(status_code=404, detail="No similar users found")
-    return [SimilarityResponse.model_validate(sim_user) for sim_user in similar_users]
+    return similar_users

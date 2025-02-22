@@ -13,3 +13,5 @@ class Similarity(Base):
 
     user = relationship("auth.models.User", foreign_keys=[user_id])
     similar_user = relationship("auth.models.User", foreign_keys=[similar_user_id])
+
+    
