@@ -64,7 +64,7 @@ async def get_user_posts(username: str, db: Session = Depends(get_db)):
 def get_random_posts(
     token: str = Depends(oauth2_scheme),
     page: int = 1,
-    limit: int = 5,
+    limit: int = 10,
     db: Session = Depends(get_db),
 ):
     user = get_current_user(db, token)

@@ -19,3 +19,17 @@ class FriendRequest(FriendRequestBase):
 
     class Config:
         from_attributes = True
+
+class DetailedSentRequest(BaseModel):
+    request: FriendRequest
+    receiver_username: str
+    receiver_profile_pic: Optional[str] = None
+
+class DetailedReceivedRequest(BaseModel):
+    request: FriendRequest
+    sender_username: str
+    sender_profile_pic: Optional[str] = None
+
+class DetailedFriendRequests(BaseModel):
+    sent_requests: List[DetailedSentRequest]
+    received_requests: List[DetailedReceivedRequest]
