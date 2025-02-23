@@ -10,6 +10,7 @@ class SimilarityBase(BaseModel):
 class SimilarityResponse(SimilarityBase):
     username: str
     profile_pic: Optional[str]
+    interests: List[str]
     
     class Config:
         from_attributes = True

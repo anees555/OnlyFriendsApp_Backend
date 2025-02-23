@@ -46,7 +46,7 @@ def create_profile_svc(db: Session, profile: ProfileCreate, user_id: int, profil
         user_id=user_id
         # interests=interests
     )
-
+    
     db.add(db_profile)
     db.commit()
     db.refresh(db_profile)

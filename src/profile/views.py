@@ -154,7 +154,9 @@ def get_current_user_profile(token: str = Depends(oauth2_scheme), db: Session = 
 def get_user_profile(username: str, db: Session = Depends(get_db)):
     user = existing_user(db, username, "")
     profile = get_user_profile_svc(db, user.id)
-    return profile
+    profile_dict = profile.dict()
+    profile_dict["user_id"] = user.id
+    return profile_dict
 
 @router.get("/myprofile/interests", response_model=List[str])
 def get_current_user_interests(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):

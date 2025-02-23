@@ -4,6 +4,7 @@ from ..auth.models import User
 from .models import Similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+import math
 
 def calculate_similarity(db: Session):
     users = db.query(User).all()
@@ -40,11 +41,14 @@ def get_similar_users(db: Session, user_id: int):
     for similar_user in similar_users:
         profile = db.query(Profile).filter(Profile.user_id == similar_user.similar_user_id).first()
         if profile:
+            interests = db.query(Interest).join(user_interest_association).filter(user_interest_association.c.user_id == similar_user.similar_user_id).all()
+            interest_names = [interest.name for interest in interests]
             result.append({
                 "user_id": similar_user.similar_user_id,
                 "similar_user_id": similar_user.user_id,
                 "username": profile.user.username,
                 "profile_pic": profile.profile_pic,
-                "similarity_score": similar_user.similarity_score
+                "similarity_score": math.ceil(similar_user.similarity_score * 100),
+                "interests": interest_names
             })
-    return result
+    return result                           

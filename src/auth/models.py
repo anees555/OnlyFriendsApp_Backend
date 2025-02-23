@@ -29,5 +29,5 @@ class User(Base):
 
     interests = relationship("Interest", secondary=user_interest_association, back_populates="users")
     
-    # sent_requests = relationship("FriendRequest", back_populates = "sender" , foreign_keys = "[FriendRequest.sender_id]")
-    # received_requests = relationship("FriendRequest", back_populates = "receiver", foreign_keys = "[FriendRequest.receiver_id]")
+    sent_requests = relationship("FriendRequest", back_populates = "sender" , foreign_keys = "[FriendRequest.sender_id]")
+    received_requests = relationship("FriendRequest", back_populates = "receiver", foreign_keys = "[FriendRequest.receiver_id]")
