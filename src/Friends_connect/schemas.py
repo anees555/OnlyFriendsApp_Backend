@@ -35,6 +35,8 @@ class DetailedFriendRequests(BaseModel):
     received_requests: List[DetailedReceivedRequest]
 
 class Friend(BaseModel):
+    user_id: int
     fullname: str
     username: str
-    profile_pic:  Optional[str] = None
+    profile_pic: Optional[str] = None
+
