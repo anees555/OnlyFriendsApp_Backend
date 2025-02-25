@@ -38,5 +38,6 @@ class Friend(BaseModel):
     user_id: int
     fullname: str
     username: str
+    
     profile_pic: Optional[str] = None
 

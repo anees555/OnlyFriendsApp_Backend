@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 from ..auth.models import User
 from .models import FriendRequest
 from .schemas import FriendRequestCreate, FriendRequestUpdate, DetailedSentRequest, DetailedReceivedRequest, DetailedFriendRequests
+from ..similarity.models import Similarity
 
 def send_friend_request(db: Session, sender_id: int, receiver_id: int):
     receiver = db.query(User).filter(User.id == receiver_id).first()
@@ -22,6 +23,16 @@ def send_friend_request(db: Session, sender_id: int, receiver_id: int):
     db.add(friend_request)
     db.commit()
     db.refresh(friend_request)
+
+    # Remove from suggestion list
+    suggestion = db.query(Similarity).filter(
+        Similarity.user_id == sender_id,
+        Similarity.similar_user_id == receiver_id
+    ).first()
+    if suggestion:
+        db.delete(suggestion)
+        db.commit()
+
     return True, friend_request
 
 def accept_friend_requests(db: Session, request_id: int):
@@ -32,15 +43,26 @@ def accept_friend_requests(db: Session, request_id: int):
     friend_request.status = "accepted"
     db.commit()
     db.refresh(friend_request)
+    
+    # Remove from friend request list
+    db.delete(friend_request)
+    db.commit()
+    
     return True, friend_request
          
 def reject_friend_requests(db: Session, request_id: int):
     friend_request = db.query(FriendRequest).filter(FriendRequest.id == request_id).first()
     if not friend_request:
         return False, "Request not found"
+    
     friend_request.status = "rejected"
     db.commit()
     db.refresh(friend_request)
+    
+    # Remove from friend request list
+    db.delete(friend_request)
+    db.commit()
+    
     return True, friend_request
 
 def get_friend_requests(db: Session, user_id: int) -> DetailedFriendRequests:
