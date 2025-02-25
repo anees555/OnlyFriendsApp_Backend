@@ -82,7 +82,12 @@ def get_friends(db: Session, user_id: int):
             friend = db.query(User).filter(User.id == request.receiver_id).first()
         else:
             friend = db.query(User).filter(User.id == request.sender_id).first()
-        friends.append(friend)
+        
+        friends.append({
+            "fullname": f"{friend.firstname} {friend.lastname}",
+            "username": friend.username,
+            "profile_pic": friend.profile.profile_pic if friend.profile else None
+        })
     
     return friends
 

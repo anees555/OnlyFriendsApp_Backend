@@ -5,8 +5,8 @@ from ..database import get_db
 from .services import send_friend_request, accept_friend_requests, reject_friend_requests, get_friend_requests, get_friends
 from ..auth.services import get_current_user
 from ..auth.schemas import User as UserSchema
-from .schemas import FriendRequestCreate, FriendRequestUpdate, FriendRequest as FriendRequestSchema, DetailedFriendRequests
-from typing import List
+from .schemas import FriendRequestCreate, FriendRequestUpdate, FriendRequest as FriendRequestSchema, DetailedFriendRequests, Friend
+from typing import List, Dict
 
 router = APIRouter(prefix = "/friends", tags = ["Friends"])
 
@@ -78,7 +78,7 @@ def get_requests(
     detailed_requests = get_friend_requests(db, user.id)
     return detailed_requests
 
-@router.get("/friends", response_model = List[UserSchema])
+@router.get("/friends", response_model = List[Friend])
 def get_user_friends(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
@@ -86,9 +86,10 @@ def get_user_friends(
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
-            status_code = status.HTTP_404_NOT_FOUND,
-            detail = "User not found"
+            status_code = status.HTTP_401_UNAUTHORIZED,
+            detail = "You are not authorized"
         )
     
     friends = get_friends(db, user.id)
     return friends
+   
