@@ -92,24 +92,28 @@ def delete_post(post_id: int, token: str = Depends(oauth2_scheme),  db: Session 
         )
 
     delete_post_svc(db, post_id)
-@router.post("/vote", status_code=status.HTTP_204_NO_CONTENT)
+@router.post("/vote", status_code=status.HTTP_200_OK)
 def vote_or_unvote_post(post_id: int, action: str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-        # Verify the token
-        user = get_current_user(db, token)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
-            )
+    # Verify the token
+    user = get_current_user(db, token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
+        )
 
-        if action == "vote":
-            res, detail = vote_post_svc(db, post_id, user.username)
-        elif action == "unvote":
-            res, detail = unvote_post_svc(db, post_id, user.username)
-        else:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid action")
+    if action == "vote":
+        res, detail = vote_post_svc(db, post_id, user.username)
+        if res:
+            return {"detail": "voted"}
+    elif action == "unvote":
+        res, detail = unvote_post_svc(db, post_id, user.username)
+        if res:
+            return {"detail": "unvoted"}
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid action")
 
-        if not res:
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
+    if not res:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
     
 @router.get("/votes/{post_id}", response_model=List[User])
 def users_like_post(post_id: int, db: Session = Depends(get_db)):
@@ -117,7 +121,7 @@ def users_like_post(post_id: int, db: Session = Depends(get_db)):
 
 @router.get("/voted", response_model=List[Post])
 def get_voted_posts(
-    token: str = Depends(oauth2_scheme), page: int = 1, limit: int = 10, db: Session = Depends(get_db)
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
 ):
     # Verify the token
     user = get_current_user(db, token)
@@ -127,7 +131,7 @@ def get_voted_posts(
         )
 
     # Get voted posts
-    return get_voted_posts_svc(db, user.username, page, limit)
+    return get_voted_posts_svc(db, user.username)
 
 @router.get("/search", response_model=List[Post])
 def search_posts(

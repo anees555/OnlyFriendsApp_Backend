@@ -112,7 +112,7 @@ def voted_users_post_svc(db: Session, post_id: int) -> list[UserSchema]:
     # return [UserSchema.from_orm(user) for user in liked_users]
     return voted_users
 
-def get_voted_posts_svc(db: Session, username: str, page: int = 1, limit: int = 10):
+def get_voted_posts_svc(db: Session, username: str):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         print(f"user not found: {username}")
@@ -121,11 +121,6 @@ def get_voted_posts_svc(db: Session, username: str, page: int = 1, limit: int = 
     voted_posts = user.voted_posts 
     print(f"Voted posts for user {username}: {[post.id for post in voted_posts]}")
 
-    total_voted_posts = len(voted_posts)
-    offset = (page - 1) * limit
-    if offset >= total_voted_posts:
-        return []
-    
     result = [
         {
             "id": post.id,
@@ -134,7 +129,7 @@ def get_voted_posts_svc(db: Session, username: str, page: int = 1, limit: int = 
             "created_at": post.created_at,
             "author_username": post.author_username,
         }
-        for post in voted_posts[offset : offset + limit]
+        for post in voted_posts
     ]
 
     return result
