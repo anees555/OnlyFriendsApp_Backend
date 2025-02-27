@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, status, HTTPException, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import desc
+from .models import post_votes
 from typing import List
 
 from ..database import get_db
@@ -92,29 +93,32 @@ def delete_post(post_id: int, token: str = Depends(oauth2_scheme),  db: Session 
         )
 
     delete_post_svc(db, post_id)
+
 @router.post("/vote", status_code=status.HTTP_200_OK)
-def vote_or_unvote_post(post_id: int, action: str, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+def vote_or_unvote_post(post_id: int, token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     # Verify the token
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not authorized."
         )
+    votes = db.query(post_votes).filter(post_votes.c.post_id == post_id).all()
+    usernames = [vote.user_username for vote in votes]
 
-    if action == "vote":
+    if user.username not in usernames:
         res, detail = vote_post_svc(db, post_id, user.username)
         if res:
             return {"detail": "voted"}
-    elif action == "unvote":
+    elif user.username in usernames:
         res, detail = unvote_post_svc(db, post_id, user.username)
         if res:
             return {"detail": "unvoted"}
     else:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid action")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid username")
 
     if not res:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=detail)
-    
+
 @router.get("/votes/{post_id}", response_model=List[User])
 def users_like_post(post_id: int, db: Session = Depends(get_db)):
     return voted_users_post_svc(db, post_id)

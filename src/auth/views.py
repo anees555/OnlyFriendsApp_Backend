@@ -33,6 +33,9 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         "access_token": access_token,
         "token_type": "bearer",
         "username": user.username,
+
+        
+        "user_id": db_user.id,
     }
 
 # login to generate token

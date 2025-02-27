@@ -3,7 +3,7 @@ import re
 from sqlalchemy import desc
 
 from .schemas import PostCreate, Post as PostSchema
-from .models import Post
+from .models import Post, post_votes
 from ..auth.models import User
 from ..auth.schemas import User as UserSchema
 
@@ -61,7 +61,6 @@ def delete_post_svc(db: Session, post_id:int):
     db.delete(post)
     db.commit()
 
-#vote post
 def vote_post_svc(db: Session, post_id: int, username: str):
     post = get_post_from_post_id_svc(db, post_id)
     if not post:
@@ -71,19 +70,19 @@ def vote_post_svc(db: Session, post_id: int, username: str):
     if not user:
         return False, "invalid username"
 
-    if user in post.voted_by_users:
+    vote = db.query(post_votes).filter(post_votes.c.user_username == username, post_votes.c.post_id == post_id).first()
+    if vote:
         return False, "already voted"
 
-    # increase like count of post
-    post.voted_by_users.append(user)
-    post.votes_count = len(post.voted_by_users)
+    # Add vote to post_votes table
+    db.execute(post_votes.insert().values(user_username=username, post_id=post_id))
+    post.votes_count += 1
 
     db.commit()
     db.refresh(post)
 
     return True, "done"
 
-# unlike post
 def unvote_post_svc(db: Session, post_id: int, username: str):
     post = get_post_from_post_id_svc(db, post_id)
     if not post:
@@ -93,15 +92,18 @@ def unvote_post_svc(db: Session, post_id: int, username: str):
     if not user:
         return False, "invalid username"
 
-    if not user in post.voted_by_users:
+    vote = db.query(post_votes).filter(post_votes.c.user_username == username, post_votes.c.post_id == post_id).first()
+    if not vote:
         return False, "already not voted"
 
-    post.voted_by_users.remove(user)
-    post.votes_count = len(post.voted_by_users)
+    # Remove vote from post_votes table
+    db.execute(post_votes.delete().where(post_votes.c.user_username == username, post_votes.c.post_id == post_id))
+    post.votes_count -= 1
 
     db.commit()
     db.refresh(post)
     return True, "done"
+
 
 # users who liked post
 def voted_users_post_svc(db: Session, post_id: int) -> list[UserSchema]:
@@ -125,6 +127,8 @@ def get_voted_posts_svc(db: Session, username: str):
         {
             "id": post.id,
             "content": post.content,
+
+
             "votes_count": post.votes_count,
             "created_at": post.created_at,
             "author_username": post.author_username,

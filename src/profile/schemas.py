@@ -5,10 +5,10 @@ from .enums import Gender
 
 class ProfileBase(BaseModel):
     date_of_birth: Optional[date]
-    gender: Optional[Gender]
-    location: Optional[str]
-    bio: Optional[str]
-    # interests: Optional[List[str]]
+    gender: Optional[Gender] = None
+    location: Optional[str] 
+    bio: Optional[str] 
+    # interests: Optional[List[str]] = None
 
 class ProfileCreate(ProfileBase):
     pass

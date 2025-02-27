@@ -21,11 +21,13 @@ class FriendRequest(FriendRequestBase):
         from_attributes = True
 
 class DetailedSentRequest(BaseModel):
+    request_id: int
     request: FriendRequest
     receiver_username: str
     receiver_profile_pic: Optional[str] = None
 
 class DetailedReceivedRequest(BaseModel):
+    request_id: int
     request: FriendRequest
     sender_username: str
     sender_profile_pic: Optional[str] = None
@@ -38,6 +40,6 @@ class Friend(BaseModel):
     user_id: int
     fullname: str
     username: str
-    
+
     profile_pic: Optional[str] = None
 

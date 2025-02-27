@@ -92,4 +92,3 @@ def get_user_friends(
     
     friends = get_friends(db, user.id)
     return friends
-   

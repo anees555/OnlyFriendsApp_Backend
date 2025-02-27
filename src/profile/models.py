@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Table
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from ..database import Base
 
@@ -16,18 +16,13 @@ class Profile(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    date_of_birth = Column(DateTime, nullable=True)
-    gender = Column(String, nullable=True)
-    location = Column(String, nullable=True)
-    # interests = Column(String, nullable=True)
-    bio = Column(String, nullable=True)
-    profile_pic  = Column(String, nullable=True)
+    date_of_birth = Column(DateTime, default=lambda: datetime.now() - timedelta(days=1))
+    gender = Column(String, default = "no gender selected")
+    location = Column(String, default="no location selected")
+    bio = Column(String, default="no bio selected")
+    profile_pic = Column(String, default="default_profile_pic.jpeg")
 
-    user = relationship("User", back_populates = "profile")
-    
-
-    # interests =  relationship("Interest", secondary=user_interest_association, back_populates = "profiles")
-    # interests = relationship("Interest", secondary=profile_interest_association, back_populates = "profiles")
+    user = relationship("User", back_populates="profile")
   
 class Interest(Base):
     __tablename__ = "interests"

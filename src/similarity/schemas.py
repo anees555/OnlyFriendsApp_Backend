@@ -11,6 +11,7 @@ class SimilarityResponse(SimilarityBase):
     username: str
     profile_pic: Optional[str]
     interests: List[str]
+    is_active: bool
     
     class Config:
         from_attributes = True

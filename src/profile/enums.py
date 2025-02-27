@@ -4,6 +4,7 @@ class Gender(str, Enum):
     MALE = "male"
     FEMALE = "female"
     OTHER = "others"
+    NO_SELECTED = "not selected"
 
 # class InterestEnum(str, Enum):
 #     Reading = "Reading"

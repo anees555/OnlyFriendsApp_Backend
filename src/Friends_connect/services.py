@@ -24,13 +24,13 @@ def send_friend_request(db: Session, sender_id: int, receiver_id: int):
     db.commit()
     db.refresh(friend_request)
 
-    # Remove from suggestion list
+    # Remove from suggestion list without deleting from the database
     suggestion = db.query(Similarity).filter(
         Similarity.user_id == sender_id,
         Similarity.similar_user_id == receiver_id
     ).first()
     if suggestion:
-        db.delete(suggestion)
+        suggestion.is_active = False  # Assuming there's an 'is_active' field to mark it as inactive
         db.commit()
 
     return True, friend_request
@@ -43,10 +43,15 @@ def accept_friend_requests(db: Session, request_id: int):
     friend_request.status = "accepted"
     db.commit()
     db.refresh(friend_request)
-    
-    # Remove from friend request list
-    db.delete(friend_request)
-    db.commit()
+
+    # Remove from suggestion list without deleting from the database
+    suggestion = db.query(Similarity).filter(
+        Similarity.user_id == friend_request.sender_id,
+        Similarity.similar_user_id == friend_request.receiver_id
+    ).first()
+    if suggestion:
+        suggestion.is_active = False
+        db.commit()
     
     return True, friend_request
          
@@ -59,9 +64,14 @@ def reject_friend_requests(db: Session, request_id: int):
     db.commit()
     db.refresh(friend_request)
     
-    # Remove from friend request list
-    db.delete(friend_request)
-    db.commit()
+    # Remove from suggestion list without deleting from the database
+    suggestion = db.query(Similarity).filter(
+        Similarity.user_id == friend_request.sender_id,
+        Similarity.similar_user_id == friend_request.receiver_id
+    ).first()
+    if suggestion:
+        suggestion.is_active = False
+        db.commit()
     
     return True, friend_request
 
@@ -73,6 +83,7 @@ def get_friend_requests(db: Session, user_id: int) -> DetailedFriendRequests:
     for request in sent_requests:
         receiver = db.query(User).filter(User.id == request.receiver_id).first()
         detailed_sent_requests.append(DetailedSentRequest(
+            request_id=request.id,
             request=request,
             receiver_username=receiver.username,
             receiver_profile_pic=receiver.profile.profile_pic if receiver.profile else None
@@ -82,6 +93,7 @@ def get_friend_requests(db: Session, user_id: int) -> DetailedFriendRequests:
     for request in received_requests:
         sender = db.query(User).filter(User.id == request.sender_id).first()
         detailed_received_requests.append(DetailedReceivedRequest(
+            request_id=request.id,
             request=request,
             sender_username=sender.username,
             sender_profile_pic=sender.profile.profile_pic if sender.profile else None
