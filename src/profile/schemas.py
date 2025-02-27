@@ -5,7 +5,7 @@ from .enums import Gender
 
 class ProfileBase(BaseModel):
     date_of_birth: Optional[date]
-    gender: Optional[Gender] = None
+    gender: Optional[Gender] 
     location: Optional[str] 
     bio: Optional[str] 
     # interests: Optional[List[str]] = None
@@ -23,7 +23,7 @@ class Profile(ProfileBase):
     id: int
     user_id: int
     profile_pic: Optional[str]
-    # interests: List[str]
+    interests: List[str]
 
     class Config:
         from_attributes = True

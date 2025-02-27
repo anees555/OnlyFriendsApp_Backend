@@ -22,15 +22,22 @@ def calculate_similarity(db: Session):
     interest_matrix = vectorizer.fit_transform(interest_texts)
     similarity_matrix = cosine_similarity(interest_matrix)
 
+    existing_similarities = db.query(Similarity).all()
+    existing_similarity_map = {(sim.user_id, sim.similar_user_id): sim.is_active for sim in existing_similarities}
+
     db.query(Similarity).delete()
     for i, user_id in enumerate(user_ids):
         for j, similar_user_id in enumerate(user_ids):
             if user_id != similar_user_id:
                 similarity_score = float(similarity_matrix[i, j])
+                is_active = existing_similarity_map.get((user_id, similar_user_id), True)
+
                 similarity_entry = Similarity(
                     user_id=user_id,
                     similar_user_id=similar_user_id,
-                    similarity_score=similarity_score
+                    similarity_score=similarity_score,
+                    is_active =  is_active
+
                 )
                 db.add(similarity_entry)
     db.commit()
@@ -44,8 +51,8 @@ def get_similar_users(db: Session, user_id: int):
             interests = db.query(Interest).join(user_interest_association).filter(user_interest_association.c.user_id == similar_user.similar_user_id).all()
             interest_names = [interest.name for interest in interests]
             result.append({
-                "user_id": similar_user.similar_user_id,
-                "similar_user_id": similar_user.user_id,
+                "user_id": similar_user.user_id,
+                "similar_user_id": similar_user.similar_user_id,
                 "username": profile.user.username,
                 "profile_pic": profile.profile_pic,
                 "similarity_score": math.ceil(similar_user.similarity_score * 100),

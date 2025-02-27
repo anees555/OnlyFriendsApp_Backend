@@ -31,6 +31,7 @@ class DetailedReceivedRequest(BaseModel):
     request: FriendRequest
     sender_username: str
     sender_profile_pic: Optional[str] = None
+    sender_interests: List[str]
 
 class DetailedFriendRequests(BaseModel):
     sent_requests: List[DetailedSentRequest]
@@ -42,4 +43,10 @@ class Friend(BaseModel):
     username: str
 
     profile_pic: Optional[str] = None
+
+class FriendRequestTable(BaseModel):
+    request_id:int
+    sender_id: int
+    receiver_id: int
+    status: str
 

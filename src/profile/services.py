@@ -2,7 +2,7 @@ from fastapi import UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
 from .schemas import ProfileCreate, ProfileUpdate, Profile as ProfileSchema
 from .models import Profile, Interest
-from ..auth.models import User
+from ..auth.models import User, user_interest_association
 from ..auth.schemas import User as UserSchema
 from typing import List
 
@@ -62,6 +62,9 @@ def get_user_profile_svc(db: Session, user_id: int) -> ProfileSchema:
         )
     
     profile_dict = existing_profile.__dict__.copy()
+    interests = db.query(Interest).join(user_interest_association).filter(user_interest_association.c.user_id == user_id).all()
+    interest_names = [interest.name for interest in interests]
+    profile_dict["interests"] = interest_names
     # profile_dict["interests"] = [interest.name for interest in existing_profile.interests]  # Assuming 'name' is the string field
     profile_data = ProfileSchema(**profile_dict)
 

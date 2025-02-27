@@ -3,6 +3,17 @@ from ..auth.models import User
 from .models import FriendRequest
 from .schemas import FriendRequestCreate, FriendRequestUpdate, DetailedSentRequest, DetailedReceivedRequest, DetailedFriendRequests
 from ..similarity.models import Similarity
+from ..profile.models import Interest
+from ..auth.models import user_interest_association
+
+def update_similarity_status(db: Session, user_id: int, similar_user_id: int):
+    suggestions = db.query(Similarity).filter(
+        (Similarity.user_id == user_id) | (Similarity.similar_user_id == user_id)
+    ).all()
+    for suggestion in suggestions:
+        if suggestion.user_id == similar_user_id or suggestion.similar_user_id == similar_user_id:
+            suggestion.is_active = False
+            db.commit()
 
 def send_friend_request(db: Session, sender_id: int, receiver_id: int):
     receiver = db.query(User).filter(User.id == receiver_id).first()
@@ -25,13 +36,7 @@ def send_friend_request(db: Session, sender_id: int, receiver_id: int):
     db.refresh(friend_request)
 
     # Remove from suggestion list without deleting from the database
-    suggestion = db.query(Similarity).filter(
-        Similarity.user_id == sender_id,
-        Similarity.similar_user_id == receiver_id
-    ).first()
-    if suggestion:
-        suggestion.is_active = False  # Assuming there's an 'is_active' field to mark it as inactive
-        db.commit()
+    update_similarity_status(db, sender_id, receiver_id)
 
     return True, friend_request
 
@@ -45,13 +50,7 @@ def accept_friend_requests(db: Session, request_id: int):
     db.refresh(friend_request)
 
     # Remove from suggestion list without deleting from the database
-    suggestion = db.query(Similarity).filter(
-        Similarity.user_id == friend_request.sender_id,
-        Similarity.similar_user_id == friend_request.receiver_id
-    ).first()
-    if suggestion:
-        suggestion.is_active = False
-        db.commit()
+    update_similarity_status(db, friend_request.sender_id, friend_request.receiver_id)
     
     return True, friend_request
          
@@ -65,19 +64,19 @@ def reject_friend_requests(db: Session, request_id: int):
     db.refresh(friend_request)
     
     # Remove from suggestion list without deleting from the database
-    suggestion = db.query(Similarity).filter(
-        Similarity.user_id == friend_request.sender_id,
-        Similarity.similar_user_id == friend_request.receiver_id
-    ).first()
-    if suggestion:
-        suggestion.is_active = False
-        db.commit()
-    
+    update_similarity_status(db, friend_request.sender_id, friend_request.receiver_id)
+
     return True, friend_request
 
 def get_friend_requests(db: Session, user_id: int) -> DetailedFriendRequests:
-    sent_requests = db.query(FriendRequest).filter(FriendRequest.sender_id == user_id).all()
-    received_requests = db.query(FriendRequest).filter(FriendRequest.receiver_id == user_id).all()
+    sent_requests = db.query(FriendRequest).filter(
+        FriendRequest.sender_id == user_id,
+        FriendRequest.status == "pending"
+    ).all()
+    received_requests = db.query(FriendRequest).filter(
+        FriendRequest.receiver_id == user_id,
+        FriendRequest.status == "pending"
+    ).all()
     
     detailed_sent_requests = []
     for request in sent_requests:
@@ -92,11 +91,15 @@ def get_friend_requests(db: Session, user_id: int) -> DetailedFriendRequests:
     detailed_received_requests = []
     for request in received_requests:
         sender = db.query(User).filter(User.id == request.sender_id).first()
+        interests = db.query(Interest).join(user_interest_association).filter(user_interest_association.c.user_id == sender.id).all()
+        interest_names = [interest.name for interest in interests]
+
         detailed_received_requests.append(DetailedReceivedRequest(
             request_id=request.id,
             request=request,
             sender_username=sender.username,
-            sender_profile_pic=sender.profile.profile_pic if sender.profile else None
+            sender_profile_pic=sender.profile.profile_pic if sender.profile else None,
+            sender_interests=interest_names  # Assuming sender has a relationship with interests
         ))
     
     return DetailedFriendRequests(
@@ -127,7 +130,6 @@ def get_friends(db: Session, user_id: int):
     
     return friends
 
-
-
-
+def get_request_table(db: Session, ):
+    pass
 
