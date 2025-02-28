@@ -18,6 +18,8 @@ class User(Base):
     lastname = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow())
+    last_active = Column(DateTime, default=datetime.utcnow())
+
 
     profile = relationship("Profile", back_populates="user", uselist=False)
 

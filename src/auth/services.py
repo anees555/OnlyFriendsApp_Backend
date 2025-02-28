@@ -70,3 +70,7 @@ def authenticate(db: Session, username: str, password: str):
         return None
     return db_user
 
+def is_user_online(last_active: datetime, threshold_minutes: int = 5) -> bool:
+    return datetime.utcnow() - last_active <= timedelta(minutes=threshold_minutes)
+
+
