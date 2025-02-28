@@ -6,6 +6,7 @@ from ..auth.models import User, user_interest_association
 from ..auth.schemas import User as UserSchema
 from typing import List
 
+
 import os
 
 def save_profile_picture(file: UploadFile, user_id: int) -> str:

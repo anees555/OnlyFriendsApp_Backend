@@ -6,13 +6,24 @@ from ..similarity.models import Similarity
 from ..profile.models import Interest
 from ..auth.models import user_interest_association
 
-def update_similarity_status(db: Session, user_id: int, similar_user_id: int):
+def accept_update_similarity_status(db: Session, user_id: int, similar_user_id: int):
     suggestions = db.query(Similarity).filter(
         (Similarity.user_id == user_id) | (Similarity.similar_user_id == user_id)
     ).all()
     for suggestion in suggestions:
         if suggestion.user_id == similar_user_id or suggestion.similar_user_id == similar_user_id:
             suggestion.is_active = False
+            db.commit()
+
+
+
+def reject_update_similarity_status(db: Session, user_id: int, similar_user_id: int):
+    suggestions = db.query(Similarity).filter(
+        (Similarity.user_id == user_id) | (Similarity.similar_user_id == user_id)
+    ).all()
+    for suggestion in suggestions:
+        if suggestion.user_id == similar_user_id or suggestion.similar_user_id == similar_user_id:
+            suggestion.is_active = True
             db.commit()
 
 def send_friend_request(db: Session, sender_id: int, receiver_id: int):
@@ -35,8 +46,8 @@ def send_friend_request(db: Session, sender_id: int, receiver_id: int):
     db.commit()
     db.refresh(friend_request)
 
-    # Remove from suggestion list without deleting from the database
-    update_similarity_status(db, sender_id, receiver_id)
+
+    accept_update_similarity_status(db, sender_id, receiver_id)
 
     return True, friend_request
 
@@ -50,7 +61,7 @@ def accept_friend_requests(db: Session, request_id: int):
     db.refresh(friend_request)
 
     # Remove from suggestion list without deleting from the database
-    update_similarity_status(db, friend_request.sender_id, friend_request.receiver_id)
+    accept_update_similarity_status(db, friend_request.sender_id, friend_request.receiver_id)
     
     return True, friend_request
          
@@ -64,7 +75,9 @@ def reject_friend_requests(db: Session, request_id: int):
     db.refresh(friend_request)
     
     # Remove from suggestion list without deleting from the database
-    update_similarity_status(db, friend_request.sender_id, friend_request.receiver_id)
+    # update_similarity_status(db, friend_request.sender_id, friend_request.receiver_id)
+
+    reject_update_similarity_status(db, friend_request.sender_id, friend_request.receiver_id)
 
     return True, friend_request
 

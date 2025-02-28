@@ -23,7 +23,7 @@ class Profile(ProfileBase):
     id: int
     user_id: int
     profile_pic: Optional[str]
-    interests: List[str]
+    interests: List[str] = None
 
     class Config:
         from_attributes = True

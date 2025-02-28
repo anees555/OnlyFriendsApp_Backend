@@ -108,7 +108,9 @@ def get_user_status(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    
+
+
+
+
     online = is_user_online(db_user.last_active)
     return {"username": db_user.username, "is_online": online}
-

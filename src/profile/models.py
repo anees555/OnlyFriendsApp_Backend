@@ -16,7 +16,7 @@ class Profile(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    date_of_birth = Column(DateTime, default=lambda: datetime.now() - timedelta(days=1))
+    date_of_birth = Column(DateTime, default=lambda: (datetime.now() - timedelta(days=1)).date())
     gender = Column(String, default = "no gender selected")
     location = Column(String, default="no location selected")
     bio = Column(String, default="no bio selected")

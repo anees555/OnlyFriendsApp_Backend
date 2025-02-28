@@ -109,7 +109,7 @@ def create_or_update_profile(
     if existing_profile:
         # Update profile
         profile_data = ProfileUpdate(
-            date_of_birth=date_of_birth or existing_profile.date_of_birth,
+            date_of_birth=(date_of_birth or existing_profile.date_of_birth).date(),
             gender=gender or existing_profile.gender,
             location=location or existing_profile.location,
             bio=bio or existing_profile.bio,
