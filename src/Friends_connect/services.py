@@ -100,9 +100,8 @@ def reject_friend_requests(db: Session, request_id: int):
     if not friend_request:
         return False, "Request not found"
 
-    friend_request.status = "rejected"
-    db.commit()
-    db.refresh(friend_request)
+    db.delete(friend_request)
+
 
     # Remove from suggestion list without deleting from the database
     # update_similarity_status(db, friend_request.sender_id, friend_request.receiver_id)
@@ -110,7 +109,7 @@ def reject_friend_requests(db: Session, request_id: int):
     reject_update_similarity_status(
         db, friend_request.sender_id, friend_request.receiver_id
     )
-
+    
     return True, friend_request
 
 
