@@ -45,5 +45,3 @@ def root():
     return "Welcome to the OnlyFriends App"
 
 
-
-
