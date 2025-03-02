@@ -32,7 +32,7 @@ def send_request(
         )
     return result
 
-@router.put("/request/{request_id}", response_model = FriendRequestSchema)
+@router.put("/request/{request_id}")
 def handle_request(
     request_id: int,
     action: str,
@@ -42,26 +42,28 @@ def handle_request(
     user = get_current_user(db, token)
     if not user:
         raise HTTPException(
-            status_code = status.HTTP_401_UNAUTHORIZED,
-            detail = "You are not authorized"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized"
         )
-    
+
     if action == "accept":
         success, result = accept_friend_requests(db, request_id)
     elif action == "reject":
         success, result = reject_friend_requests(db, request_id)
+    if success:
+            return {"message": result}  # Return a simple success message
     else:
         raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST,
-            detail = "Invalid action"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid action"
         )
-    
+
     if not success:
         raise HTTPException(
-            status_code = status.HTTP_400_BAD_REQUEST,
-            detail = result
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result
         )
-    
+
     return result
 
 @router.get("/requests", response_model = DetailedFriendRequests)
