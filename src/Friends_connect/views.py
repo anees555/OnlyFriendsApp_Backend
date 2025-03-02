@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Header
 from sqlalchemy.orm import Session 
 from fastapi.security import OAuth2PasswordBearer
 from ..database import get_db
-from .services import send_friend_request, accept_friend_requests, reject_friend_requests, get_friend_requests, get_friends
+from .services import send_friend_request, accept_friend_requests, reject_friend_requests, get_friend_requests, get_friends, unsend_friend_request
 from ..auth.services import get_current_user
 from ..auth.schemas import User as UserSchema
 from .schemas import FriendRequestCreate, FriendRequestUpdate, FriendRequest as FriendRequestSchema, DetailedFriendRequests, Friend
@@ -50,8 +50,7 @@ def handle_request(
         success, result = accept_friend_requests(db, request_id)
     elif action == "reject":
         success, result = reject_friend_requests(db, request_id)
-    if success:
-            return {"message": result}  # Return a simple success message
+
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -59,7 +58,7 @@ def handle_request(
         )
 
     if not success:
-        raise HTTPException(
+            raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=result
         )
@@ -94,3 +93,27 @@ def get_user_friends(
     
     friends = get_friends(db, user.id)
     return friends
+
+@router.delete("/request/unsend/{receiver_id}")
+def unsend_request(
+    receiver_id: int,
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    user = get_current_user(db, token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You are not authorized"
+        )
+
+    success, result = unsend_friend_request(db, user.id, receiver_id)
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result
+        )
+
+    return {"message": result}
+
