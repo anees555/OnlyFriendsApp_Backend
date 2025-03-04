@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, HTTPException, UploadFile, File,
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 
 from ..database import get_db
 from .schemas import ProfileCreate, ProfileUpdate, Profile as ProfileSchema
@@ -107,14 +107,18 @@ def create_or_update_profile(
     existing_profile = db.query(Profile).filter(Profile.user_id == user.id).first()
 
     if existing_profile:
-        # Update profile
-        profile_data = ProfileUpdate(
-            date_of_birth=(date_of_birth or existing_profile.date_of_birth).date(),
-            gender=gender or existing_profile.gender,
-            location=location or existing_profile.location,
-            bio=bio or existing_profile.bio,
-        )
+    # Ensure date_of_birth is a date object
+        date_of_birth = date_of_birth or existing_profile.date_of_birth
+        if isinstance(date_of_birth, datetime):
+            date_of_birth = date_of_birth.date()
 
+    # Update profile
+        profile_data = ProfileUpdate(
+        date_of_birth=date_of_birth,
+        gender=gender or existing_profile.gender,           
+        location=location or existing_profile.location,
+        bio=bio or existing_profile.bio,
+    )
         try:
             updated_profile = update_profile_svc(db, profile_data, user.id, profile_pic)
         except ValueError as e:

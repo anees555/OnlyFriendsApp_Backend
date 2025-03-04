@@ -3,7 +3,7 @@ from .database import Base, engine
 from .api import router
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 
 Base.metadata.create_all(bind = engine)
 
