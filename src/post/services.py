@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 import re
-from sqlalchemy import desc
+# from sqlalchemy. import desc
+from sqlalchemy.sql.expression import desc
 
 from .schemas import PostCreate, Post as PostSchema
 from .models import Post, post_votes
