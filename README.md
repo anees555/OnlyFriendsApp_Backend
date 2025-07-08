@@ -14,6 +14,10 @@ A modern social web platform that connects people based on shared interests usin
 
 ✅ **Friend Recommendations**
 - Backend uses cosine similarity to recommend users with similar interests.
+- And can connet by sending connection request.
+
+✅ **CRUD Operation on testual post**
+- User can create update delete their posts/vibes and other user can vote or unvote the posts.
 
 ✅ **Full API Documentation**
 - Accessible via FastAPI Swagger at `/docs`.
