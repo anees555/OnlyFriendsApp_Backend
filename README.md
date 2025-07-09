@@ -4,7 +4,7 @@ A modern social web platform that connects people based on shared interests usin
 
 ---
 
-## ✨ Features
+##  Features
 
 ✅ **User Registration & Authentication**
 - Secure JWT-based login and signup.
@@ -16,7 +16,7 @@ A modern social web platform that connects people based on shared interests usin
 - Backend uses cosine similarity to recommend users with similar interests.
 - And can connet by sending connection request.
 
-✅ **CRUD Operation on testual post**
+✅ **CRUD Operation on textual post**
 - User can create update delete their posts/vibes and other user can vote or unvote the posts.
 
 ✅ **Full API Documentation**
@@ -28,7 +28,7 @@ A modern social web platform that connects people based on shared interests usin
 
 ---
 
-## 🏗️ Tech Stack
+##  Tech Stack
 
 | Layer     | Technology                    |
 |-----------|-------------------------------|
@@ -45,7 +45,7 @@ A modern social web platform that connects people based on shared interests usin
 
 ### 🌍 Live URLs
 - **Frontend:** [https://onlyfriendsapp.netlify.app](https://onlyfriendsapp.netlify.app)
-- **Backend API:** [https://your-fastapi-app.onrender.com](https://your-fastapi-app.onrender.com)
+- **Backend API:** [https://onlyfriendsapp-backend-3.onrender.com](https://onlyfriendsapp-backend-3.onrender.comS)
 - **API Docs:** [https://onlyfriendsapp-backend-3.onrender.com/docs](https://onlyfriendsapp-backend-3.onrender.com/docs)
 
 
@@ -60,6 +60,9 @@ cd OnlyFriendsApp_Backend
 python -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
+
+TO start server locally:
+uvicorn src.main:app --reload
 ```
 --- 
 
